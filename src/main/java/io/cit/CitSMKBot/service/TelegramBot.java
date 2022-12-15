@@ -28,15 +28,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     public TelegramBot(TelegramFacade telegramFacade, BotConfig config){
         this.telegramFacade = telegramFacade;
         this.config = config;
-        List<BotCommand> listOfCommands = new ArrayList();
-        listOfCommands.add(new BotCommand("/start", "Начало работы"));
-        listOfCommands.add(new BotCommand("/help", "Помощь в командах"));
-        try {
-            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
-        }
-        catch (TelegramApiException e){
-            log.error("Error setting bot's command list: " + e.getMessage());
-        }
+        createMenuCommands();
     }
 
     @Override
@@ -53,6 +45,18 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         BotApiMethod<?> replyMessageToUser = telegramFacade.handleUpdate(update);
         tryExecuteMessage(replyMessageToUser);
+    }
+
+    private void createMenuCommands() {
+        List<BotCommand> listOfCommands = new ArrayList();
+        listOfCommands.add(new BotCommand("/start", "Начало работы"));
+        listOfCommands.add(new BotCommand("/help", "Помощь в командах"));
+        try {
+            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
+        }
+        catch (TelegramApiException e){
+            log.error("Error setting bot's command list: " + e.getMessage());
+        }
     }
 
     private void tryExecuteMessage(BotApiMethod<?> message) {

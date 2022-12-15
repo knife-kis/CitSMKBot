@@ -6,6 +6,10 @@ package io.cit.CitSMKBot.botapi;
 public enum BotState {
     WHO_ARE_YOU,
     WHICH_SECTION,
+    WHICH_SECTION_CHIEF,
+    WHICH_SECTION_CHIEF_USER,
+    WHICH_SECTION_CHIEF_USERS,
+    WHICH_SECTION_ENGINEER,
     ASK_NAME,
     ASK_AGE,
     ASK_GENDER,

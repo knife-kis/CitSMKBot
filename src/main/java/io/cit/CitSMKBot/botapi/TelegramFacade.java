@@ -3,7 +3,6 @@ package io.cit.CitSMKBot.botapi;
 import io.cit.CitSMKBot.cache.UserDataCache;
 import io.cit.CitSMKBot.model.User;
 import io.cit.CitSMKBot.model.UserRepository;
-import io.cit.CitSMKBot.service.MainMenuService;
 import io.cit.CitSMKBot.service.ReplyMessagesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,35 +30,44 @@ public class TelegramFacade {
     private BotStateContext botStateContext;
     private UserDataCache userDataCache;
     private ReplyMessagesService messagesService;
-
-    @Autowired
     private UserRepository userRepository;
 
     public TelegramFacade(BotStateContext botStateContext,
                           UserDataCache userDataCache,
-                          ReplyMessagesService messagesService) {
+                          ReplyMessagesService messagesService, UserRepository userRepository) {
         this.botStateContext = botStateContext;
         this.userDataCache = userDataCache;
         this.messagesService = messagesService;
+        this.userRepository = userRepository;
     }
 
     public BotApiMethod<?> handleUpdate(Update update) {
         SendMessage replyMessage = null;
 
         if (update.hasCallbackQuery()) {    // Проверка на кнопки
-            CallbackQuery callbackQuery = update.getCallbackQuery();
-            log.info("New callbackQuery from User: {}, userId: {}, with data: {}", update.getCallbackQuery().getFrom().getUserName(),
-                    callbackQuery.getFrom().getId(), update.getCallbackQuery().getData());
-            return processCallbackQuery(callbackQuery);
+            return processCallbackQuery(buttonAnalysis(update));
         }
 
-        Message message = update.getMessage();  // Проверка на текстовое сообщение
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            log.info("New message from User:{}, chatId: {},  with text: {}",
-                    message.getFrom().getUserName(), message.getChatId(), message.getText());
-            replyMessage = handleInputMessage(message);
+        if (update.hasMessage() && update.getMessage().hasText()) { // Проверка на текстовое сообщение
+            replyMessage = textAnalysis(update);
         }
 
+        return replyMessage;
+    }
+
+    private CallbackQuery buttonAnalysis(Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        log.info("New callbackQuery from User: {}, userId: {}, with data: {}", update.getCallbackQuery().getFrom().getUserName(),
+                callbackQuery.getFrom().getId(), update.getCallbackQuery().getData());
+        return callbackQuery;
+    }
+
+    private SendMessage textAnalysis(Update update) {
+        SendMessage replyMessage;
+        Message message = update.getMessage();
+        log.info("New message from User:{}, chatId: {},  with text: {}",
+                message.getFrom().getUserName(), message.getChatId(), message.getText());
+        replyMessage = handleInputMessage(message);
         return replyMessage;
     }
 
@@ -83,7 +91,6 @@ public class TelegramFacade {
         }
 
         userDataCache.setUsersCurrentBotState(userId, botState);
-
         replyMessage = botStateContext.processInputMessage(botState, message);
 
         return replyMessage;
@@ -96,12 +103,10 @@ public class TelegramFacade {
             Chat chat = msg.getChat();
 
             User user = new User();
-
             user.setChatId(chatId);
             user.setFirstName(chat.getFirstName());
             user.setLastName(chat.getLastName());
             user.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
-
             userRepository.save(user);
             log.info("Пользователь сохранен: " + user);
         }
@@ -110,21 +115,17 @@ public class TelegramFacade {
     private BotApiMethod<?> processCallbackQuery(CallbackQuery buttonQuery) {
         final long chatId = buttonQuery.getMessage().getChatId();
         final long userId = buttonQuery.getFrom().getId();
+        BotState botState = userDataCache.getUsersCurrentBotState(userId);
         SendMessage callBackAnswer = null;
 
-        //From Destiny choose buttons
-        if (buttonQuery.getData().equals("CHIEF")) {
-            callBackAnswer = messagesService.getReplyMessage(chatId, "bot.askChiefSection");
-            userDataCache.setUsersCurrentBotState(userId, BotState.WHICH_SECTION);
-            callBackAnswer.setReplyMarkup(getInlineMessageButtonsSectionChief());
-        }
-        //From Gender choose buttons
-        else if (buttonQuery.getData().equals("ENG")) {
-            userDataCache.setUsersCurrentBotState(userId, BotState.WHICH_SECTION);
-            callBackAnswer = messagesService.getReplyMessage(chatId, "bot.askEngineerSection");
-        } else {
-            userDataCache.setUsersCurrentBotState(userId, BotState.SHOW_MAIN_MENU);
-        }
+            if (buttonQuery.getData().equals("CHIEF")) {
+                callBackAnswer = messagesService.getReplyMessage(chatId, "bot.askChiefSection");
+                callBackAnswer.setReplyMarkup(getInlineMessageButtonsSectionChief());
+            }
+            else if (buttonQuery.getData().equals("ENG")) {
+                callBackAnswer = messagesService.getReplyMessage(chatId, "bot.askEngineerSection");
+            }
+
         return callBackAnswer;
     }
 
@@ -167,6 +168,5 @@ public class TelegramFacade {
         button.setText(post);
         button.setCallbackData(postData);
         return button;
-
     }
 }

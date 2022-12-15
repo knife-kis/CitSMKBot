@@ -45,33 +45,33 @@ public class AskWhoAreYou implements InputMessageHandler {
         long chatId = inputMsg.getChatId();
 
         SendMessage replyToUser = messagesService.getReplyMessage(chatId,"bot.whoAreYou");
-//        replyToUser.setReplyMarkup(getInlineMessageButtons());
+        replyToUser.setReplyMarkup(getInlineMessageButtons());
 
         return replyToUser;
     }
 
-//    private InlineKeyboardMarkup getInlineMessageButtons() {
-//        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-//        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-//        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-//
-//        rowInLine.add(createRoleButton("Заведующий", "CHIEF"));
-//        rowInLine.add(createRoleButton("Инженер", "ENG"));
-//
-//        rowsInLine.add(rowInLine);
-//        markup.setKeyboard(rowsInLine);
-//
-//        return markup;
-//
-//    }
+    private InlineKeyboardMarkup getInlineMessageButtons() {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
 
-//    private InlineKeyboardButton createRoleButton(String post, String postData) {
-//        var button = new InlineKeyboardButton();
-//        button.setText(post);
-//        button.setCallbackData(postData);
-//        return button;
-//
-//    }
+        rowInLine.add(createRoleButton("Заведующий", "CHIEF"));
+        rowInLine.add(createRoleButton("Инженер", "ENG"));
+
+        rowsInLine.add(rowInLine);
+        markup.setKeyboard(rowsInLine);
+
+        return markup;
+
+    }
+
+    private InlineKeyboardButton createRoleButton(String post, String postData) {
+        var button = new InlineKeyboardButton();
+        button.setText(post);
+        button.setCallbackData(postData);
+        return button;
+
+    }
 }
 
 

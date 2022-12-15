@@ -26,7 +26,7 @@ public class BotStateContext {
 
     private InputMessageHandler findMessageHandler(BotState currentState) {
         if (isFillingProfileState(currentState)) {
-            return messageHandlers.get(BotState.WHICH_SECTION);
+            return messageHandlers.get(BotState.WHO_ARE_YOU);
         }
 
         return messageHandlers.get(currentState);
@@ -36,6 +36,9 @@ public class BotStateContext {
         switch (currentState) {
             case WHO_ARE_YOU:
             case WHICH_SECTION:
+            case WHICH_SECTION_CHIEF:
+            case WHICH_SECTION_CHIEF_USER:
+            case WHICH_SECTION_CHIEF_USERS:
                 return true;
             default:
                 return false;
